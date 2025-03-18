@@ -3,6 +3,10 @@ import pandas as pd
 import os
 
 app = Flask(__name__)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Gets the directory of the script
+CSV_PATH = os.path.join(BASE_DIR, "dashboard_data.csv")  # Creates full path
+
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -25,7 +29,7 @@ def index():
     if request.method == 'POST':
         file = request.files['file']
         if file.filename.endswith('.csv'):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file_path = CSV_PATH
             file.save(file_path)
             df = pd.read_csv(file_path)
 
@@ -53,12 +57,11 @@ def filter_data():
 
     return jsonify(filtered_df.to_dict(orient='records'))
 
-# Uncomment the section below if you want a static CSV file instead of uploads
 
     @app.route('/data', methods=['GET'])
     def load_static_data():
         global df
-        static_file = "dashboard_data.csv"  # Path to static CSV file
+        static_file = CSV_PATH  # Path to static CSV file
         df = pd.read_csv(static_file)
 
         # Rename columns
