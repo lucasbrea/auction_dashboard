@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # Define the persistent storage path
-PERSISTENT_FOLDER = "/opt/render/project/src/uploads"
+PERSISTENT_FOLDER = "/opt/render/project/src/"
 CSV_PATH = os.path.join(PERSISTENT_FOLDER, "dashboard_data.csv")
 
 # Ensure directory exists
