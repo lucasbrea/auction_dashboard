@@ -4,15 +4,14 @@ import os
 
 app = Flask(__name__)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Gets the directory of the script
-CSV_PATH = os.path.join(BASE_DIR, "dashboard_data.csv")  # Creates full path
+# Define the persistent storage path
+PERSISTENT_FOLDER = "/opt/render/project/src/uploads"
+CSV_PATH = os.path.join(PERSISTENT_FOLDER, "dashboard_data.csv")
 
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Ensure directory exists
+os.makedirs(PERSISTENT_FOLDER, exist_ok=True)
 
-df = None  # Global variable to store data
-
+# Column renaming dictionary
 COLUMN_RENAMES = {
     "lote": "Lote",
     "name": "Name",
@@ -23,58 +22,45 @@ COLUMN_RENAMES = {
     "link": "Auction Reference",
 }
 
-@app.route('/', methods=['GET', 'POST'])
+# Load data at startup if the CSV exists
+df = None
+if os.path.exists(CSV_PATH):
+    df = pd.read_csv(CSV_PATH)
+    df.rename(columns=COLUMN_RENAMES, inplace=True)
+
+@app.route('/')
 def index():
-    global df
-    if request.method == 'POST':
-        file = request.files['file']
-        if file.filename.endswith('.csv'):
-            file_path = CSV_PATH
-            file.save(file_path)
-            df = pd.read_csv(file_path)
-
-            # Rename columns
-            df.rename(columns=COLUMN_RENAMES, inplace=True)
-
-            return render_template('index.html', columns=df.columns, data=df.to_dict(orient='records'))
-    
+    """Render homepage with data if available."""
+    if df is not None:
+        return render_template('index.html', columns=df.columns, data=df.to_dict(orient='records'))
     return render_template('index.html', columns=[], data=[])
 
-@app.route('/filter', methods=['POST'])
-def filter_data():
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    """Handles file upload and saves it to the persistent disk."""
     global df
-    if df is None:
-        return jsonify({'error': 'No data uploaded yet.'})
-    
-    filters = request.json
-    filtered_df = df.copy()
-    
-    for column, value in filters.items():
-        if value:
-            filtered_df = filtered_df[filtered_df[column].astype(str).str.contains(value, case=False, na=False)]
-    
-    return jsonify(filtered_df.to_dict(orient='records'))
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
 
-    return jsonify(filtered_df.to_dict(orient='records'))
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
 
-
-    @app.route('/data', methods=['GET'])
-    def load_static_data():
-        global df
-        static_file = CSV_PATH  # Path to static CSV file
-        df = pd.read_csv(static_file)
-
-        # Rename columns
+    if file and file.filename.endswith('.csv'):
+        file.save(CSV_PATH)  # Save to persistent storage
+        df = pd.read_csv(CSV_PATH)
         df.rename(columns=COLUMN_RENAMES, inplace=True)
+        return jsonify({'message': 'File uploaded and data loaded successfully'}), 200
 
-        # Format percentage columns
-        percentage_cols = ["PR (%)", "PS (%)", "PRS (%)"]
-        for col in percentage_cols:
-            if col in df.columns:
-                df[col] = df[col].astype(float).map(lambda x: f"{x:.2f}%")
+    return jsonify({'error': 'Invalid file format. Please upload a CSV file.'}), 400
 
-        return jsonify(df.to_dict(orient="records"))
+@app.route('/data', methods=['GET'])
+def load_static_data():
+    """Returns the full dataset in JSON format."""
+    if df is None:
+        return jsonify({'error': 'No data available.'})
 
+    return jsonify(df.to_dict(orient="records"))
 
 if __name__ == '__main__':
     app.run(debug=True)
