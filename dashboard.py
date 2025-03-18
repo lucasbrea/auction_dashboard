@@ -26,6 +26,7 @@ COLUMN_RENAMES = {
 df = None
 if os.path.exists(CSV_PATH):
     df = pd.read_csv(CSV_PATH)
+    print(df)
     df.rename(columns=COLUMN_RENAMES, inplace=True)
 
 @app.route('/')
