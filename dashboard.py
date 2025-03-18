@@ -58,7 +58,7 @@ def filter_data():
     @app.route('/data', methods=['GET'])
     def load_static_data():
         global df
-        static_file = "/Users/lucasbrea/Developer/Auction Dashboard/uploads/dashboard_data.csv"  # Path to static CSV file
+        static_file = "dashboard_data.csv"  # Path to static CSV file
         df = pd.read_csv(static_file)
 
         # Rename columns
