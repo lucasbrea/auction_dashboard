@@ -18,7 +18,7 @@ COLUMN_RENAMES = {
     "padrillo": "Sire",
     "M": "Dam",
     "birth_eday": "Birth Date",
-    "haras": "Hara",
+    "haras": "Haras",
     "link": "Auction Reference",
 }
 
