@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # Define the persistent storage path
 PERSISTENT_FOLDER = "/opt/render/project/src/"
-CSV_PATH = os.path.join(PERSISTENT_FOLDER, "dashboard_data.csv")
+CSV_PATH = os.path.join(PERSISTENT_FOLDER, "merged_auctions.csv")
 
 # Ensure directory exists
 os.makedirs(PERSISTENT_FOLDER, exist_ok=True)
