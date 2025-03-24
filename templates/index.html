@@ -45,6 +45,9 @@
             padding: 10px;
             background: #1e1e1e; /* Matches container */
             border-radius: 5px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         /* Adjust filter inputs */
@@ -63,7 +66,7 @@
         .table-container {
             width: 100%;
             overflow-x: auto;
-            margin-bottom: 15px; /* Add space before the table */
+            margin-bottom: 15px;
         }
         .filter-input::placeholder {
             color: white;
@@ -76,8 +79,10 @@
             border-collapse: collapse;
         }
         thead {
-            background-color: #333 !important; /* Darker header */
-            color: white !important;
+            position: sticky;
+            top: 80px; /* Adjust based on your filters height */
+            z-index: 999;
+            background-color: #333 !important;
         }
         th, td {
             text-align: center;
@@ -193,13 +198,50 @@
             let yeguaTable = $('#yegua-table').DataTable({
                 paging: false,
                 searching: true,
-                ordering: true
+                ordering: true,
+                columnDefs: [
+                    {
+                        targets: function(column) {
+                            let columnName = $('#yegua-table thead th').eq(column).text();
+                            return ['PR', 'PS', 'PRS'].includes(columnName) ? column : -1;
+                        },
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                return parseFloat(data).toFixed(2) + '%';
+                            }
+                            return data;
+                        }
+                    }
+                ]
             });
 
             let caballosTable = $('#caballos-table').DataTable({
                 paging: false,
                 searching: true,
-                ordering: true
+                ordering: true,
+                columnDefs: [
+                    {
+                        targets: function(column) {
+                            let columnName = $('#caballos-table thead th').eq(column).text();
+                            return ['PR', 'PS', 'PRS'].includes(columnName) ? column : -1;
+                        },
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                return parseFloat(data).toFixed(2) + '%';
+                            }
+                            return data;
+                        }
+                    }
+                ]
+            });
+
+            // Ensure tab content is visible
+            $('#yegua-tab').on('shown.bs.tab', function (e) {
+                yeguaTable.columns.adjust();
+            });
+            
+            $('#caballos-tab').on('shown.bs.tab', function (e) {
+                caballosTable.columns.adjust();
             });
 
             // Filtering for Yegua Table
