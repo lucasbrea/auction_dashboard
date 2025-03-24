@@ -198,41 +198,13 @@
             let yeguaTable = $('#yegua-table').DataTable({
                 paging: false,
                 searching: true,
-                ordering: true,
-                columnDefs: [
-                    {
-                        targets: function(column) {
-                            let columnName = $('#yegua-table thead th').eq(column).text();
-                            return ['PR', 'PS', 'PRS'].includes(columnName) ? column : -1;
-                        },
-                        render: function(data, type, row) {
-                            if (type === 'display') {
-                                return parseFloat(data).toFixed(2) + '%';
-                            }
-                            return data;
-                        }
-                    }
-                ]
+                ordering: true
             });
 
             let caballosTable = $('#caballos-table').DataTable({
                 paging: false,
                 searching: true,
-                ordering: true,
-                columnDefs: [
-                    {
-                        targets: function(column) {
-                            let columnName = $('#caballos-table thead th').eq(column).text();
-                            return ['PR', 'PS', 'PRS'].includes(columnName) ? column : -1;
-                        },
-                        render: function(data, type, row) {
-                            if (type === 'display') {
-                                return parseFloat(data).toFixed(2) + '%';
-                            }
-                            return data;
-                        }
-                    }
-                ]
+                ordering: true
             });
 
             // Ensure tab content is visible
