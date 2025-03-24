@@ -29,39 +29,66 @@ if os.path.exists(CSV_PATH):
     print(df)
     df.rename(columns=COLUMN_RENAMES, inplace=True)
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
-    """Render homepage with data if available."""
-    if df is not None:
-        return render_template('index.html', columns=df.columns, data=df.to_dict(orient='records'))
-    return render_template('index.html', columns=[], data=[])
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    """Handles file upload and saves it to the persistent disk."""
-    global df
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-
-    if file and file.filename.endswith('.csv'):
-        file.save(CSV_PATH)  # Save to persistent storage
+    if os.path.exists(CSV_PATH):
+        # Load the merged CSV
         df = pd.read_csv(CSV_PATH)
-        df.rename(columns=COLUMN_RENAMES, inplace=True)
-        return jsonify({'message': 'File uploaded and data loaded successfully'}), 200
 
-    return jsonify({'error': 'Invalid file format. Please upload a CSV file.'}), 400
+        # Rename columns
+        df.rename(columns=COLUMN_RENAMES, inplace=True)
+
+        # Convert 'Yegua' column to boolean (if exists)
+        if 'Yegua' in df.columns:
+            df['Yegua'] = df['Yegua'].astype(bool)
+
+        # Filter data for tabs
+        df_yegua = df[df['Yegua']] if 'Yegua' in df.columns else pd.DataFrame()
+        df_caballos = df[~df['Yegua']] if 'Yegua' in df.columns else df
+
+        return render_template('index.html', 
+                               columns=df.columns, 
+                               data_yegua=df_yegua.to_dict(orient='records'), 
+                               data_caballos=df_caballos.to_dict(orient='records'))
+    
+    return render_template('index.html', columns=[], data_yegua=[], data_caballos=[], message="No data found in merged_auctions.csv")
+
+
+@app.route('/filter', methods=['POST'])
+def filter_data():
+    if not os.path.exists(CSV_PATH):
+        return jsonify({'error': 'No data available.'})
+
+    df = pd.read_csv(CSV_PATH)
+    df.rename(columns=COLUMN_RENAMES, inplace=True)
+
+    filters = request.json
+    filtered_df = df.copy()
+    
+    for column, value in filters.items():
+        if column in filtered_df.columns and value:
+            filtered_df = filtered_df[filtered_df[column].astype(str).str.contains(value, case=False, na=False)]
+    
+    return jsonify(filtered_df.to_dict(orient='records'))
+
 
 @app.route('/data', methods=['GET'])
 def load_static_data():
-    """Returns the full dataset in JSON format."""
-    if df is None:
+    """Returns all dataset entries at once."""
+    if not os.path.exists(CSV_PATH):
         return jsonify({'error': 'No data available.'})
 
-    return jsonify(df.to_dict(orient="records"))
+    df = pd.read_csv(CSV_PATH)
+    df.rename(columns=COLUMN_RENAMES, inplace=True)
+
+    # Format percentage columns if they exist
+    percentage_cols = ["PR (%)", "PS (%)", "PRS (%)"]
+    for col in percentage_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').map(lambda x: f"{x:.2f}%" if pd.notnull(x) else "")
+
+    return jsonify({'data': df.to_dict(orient="records")})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
