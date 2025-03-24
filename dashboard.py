@@ -37,6 +37,12 @@ def index():
         if 'Yegua' in df.columns:
             df['Yegua'] = df['Yegua'].astype(bool)
 
+        # Format percentage columns if they exist
+        percentage_cols = ["PR", "PS", "PRS"]
+        for col in percentage_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce').map(lambda x: f"{x:.2f}%" if pd.notnull(x) else "")
+
         # Filter data for tabs
         df_yegua = df[df['Yegua']] if 'Yegua' in df.columns else pd.DataFrame()
         df_caballos = df[~df['Yegua']] if 'Yegua' in df.columns else df
