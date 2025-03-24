@@ -4,13 +4,8 @@ import os
 
 app = Flask(__name__)
 
-# Define the persistent storage path
-PERSISTENT_FOLDER = "/opt/render/project/src/"
-CSV_PATH = os.path.join(PERSISTENT_FOLDER, "merged_auctions.csv")
 
-# Ensure directory exists
-os.makedirs(PERSISTENT_FOLDER, exist_ok=True)
-
+CSV_PATH =  "/opt/render/project/src/merged_auctions.csv")
 # Column renaming dictionary
 COLUMN_RENAMES = {
     "lote": "Lote",
