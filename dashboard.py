@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 
-CSV_PATH =  "/opt/render/project/src/merged_auctions.csv")
+CSV_PATH =  "/opt/render/project/src/merged_auctions.csv"
 # Column renaming dictionary
 COLUMN_RENAMES = {
     "lote": "Lote",
